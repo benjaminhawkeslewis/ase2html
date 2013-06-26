@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+
+import sys
+import signal
+import argparse
+import swatch
+
+def main():
+    args = parse_arguments()
+    swatches = swatch.parse(args.ase_path)
+    print '<!doctype html>'
+    print '<title>Palette</title>'
+    print '<style>div{padding:20px}p{background:black;color:white}</style>'
+    
+    for s in swatches:
+        if 'RGB' == s['data']['mode']:
+            rgb_dec_values = ['%0.f' % (255 * v) for v in s['data']['values'] ]
+            rgb_hex_values = [ '%02x' % (255 * v) for v in s['data']['values'] ]
+            color = '#{}{}{}'.format(*rgb_hex_values)
+            print '<div style="background-color: {color}"><p>{color}</p><p>RGB: {rgb_dec_values[0]}, {rgb_dec_values[1]}, {rgb_dec_values[2]}</p></div>'.format(color=color, rgb_dec_values=rgb_dec_values)
+        else:
+            print '<!-- Not yet handling mode: {} -->'.format(s['data']['mode'])
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description='Dump an Adobe Swatch Exchange (ASE) palette to HTML document displaying the palette (STDOUT)'
+    )
+    parser.add_argument(
+        'ase_path',
+        help='ASE file (e.g. "path/to/my-swatches.ase")'
+    )
+    return parser.parse_args()
+
+def handle_signal_interrupt(signal, frame):
+    sys.exit(0)
+
+if __name__ == '__main__':
+    signal.signal(signal.SIGINT, handle_signal_interrupt)
+    sys.exit(main())
